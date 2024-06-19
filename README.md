@@ -24,6 +24,19 @@ npm i pm2
 npm run setup
 ```
 
+
+# How to start using AgensGraphViewer
+
+AgensGraphViewer is a graphical user interface for AgensGraph, so it needs an AgensGraph server running on the background. 
+
+Tipically, this is done with the command 
+
+```
+ag_ctl start [-D /path/created/by/initdb]
+```
+
+For the other settings or usage instructions, please follow [AgensGraph's documentation](https://bitnine.net/documentations/quick-guide-1-3.html).
+
 # Running AgensGraphViewer
 
 - Run AgenGraphViewer using : 
@@ -33,16 +46,6 @@ npm run start
 ```
 
 >This will start AgensGraphViewer on http://localhost:3000 if port 3000 is free.
-
----
-
-# How to start using Age-Viewer
-
-AgensGraphViewer is a graphical user interface for AgensGraph, so it needs an AgensGraph server running on the background. 
-
-For the other settings or usage instructions, please follow [AgensGraph's documentation](https://bitnine.net/documentations/quick-guide-1-3.html).
-	
----
 
 ### Connect AgensGraphViewer to AgensGraph Database
 
