@@ -16,14 +16,13 @@ npm i pm2
 
 > [pm2](https://www.npmjs.com/package/pm2) is an NPM module to run the project in production mode, and hence is optional for getting started with setting up development environment for AgensGraphViewer 
 
-# Installing AgenGraphViewer
+# Installing AgensGraphViewer
 
 - Install the required node modules using  :  
 
 ```bash
 npm run setup
 ```
-
 
 # How to start using AgensGraphViewer
 
