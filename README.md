@@ -41,7 +41,7 @@ For the other settings or usage instructions, please follow [AgensGraph's docume
 - Run AgenGraphViewer in production environment using : 
 
 ```bash
-pm2 start ecosystem.config.js --env release                                                                                                                      ─╯
+pm2 start ecosystem.config.js --env release
 ```
 
 To stop the process use the commands:
