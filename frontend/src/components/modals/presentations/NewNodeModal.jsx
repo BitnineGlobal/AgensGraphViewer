@@ -35,7 +35,6 @@ function genNewNodeQuery(jsonInput) {
 }
 
 function onCreate(values, setOpen, setCommand) {
-  console.log('Received values of form: ', values);
   setCommand(genNewNodeQuery(values));
   setOpen(false);
 }
