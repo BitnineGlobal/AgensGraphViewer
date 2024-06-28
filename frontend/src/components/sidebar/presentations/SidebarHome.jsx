@@ -15,9 +15,7 @@
  */
 
 import React, { useState } from 'react';
-import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Modal, Button } from 'antd';
 import { Modal, Button } from 'antd';
 
 import uuid from 'react-uuid';
