@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { Modal, Button } from 'antd';
+import { Modal, Button } from 'antd';
 
-import { Modal } from 'antd';
 import uuid from 'react-uuid';
 import { connect, useDispatch } from 'react-redux';
-import { VerticalLine, SubLabelLeft, SubLabelRight } from './SidebarComponents';
+
+import { SubLabelLeft, SubLabelRight } from './SidebarComponents';
+import { NewNodeModal } from '../../modals/presentations/NewNodeModal';
 
 const genLabelQuery = (eleType, labelName, database) => {
   function age() {
@@ -76,17 +80,19 @@ $$) as (V agtype, R agtype, V2 agtype);`;
 
 const genPropQuery = (eleType, propertyName) => {
   if (eleType === 'v') {
-    return `MATCH (V) WHERE V.${propertyName} IS NOT NULL RETURN V`;
+    return `MATCH (V) WHERE V.'${propertyName}' IS NOT NULL RETURN V`;
   }
   if (eleType === 'e') {
-    return `MATCH (V)-[R]->(V2) WHERE R.${propertyName} IS NOT NULL RETURN *`;
+    return `MATCH (V)-[R]->(V2) WHERE R.'${propertyName}' IS NOT NULL RETURN *`;
   }
   return '';
 };
 
 const NodeList = ({ nodes, setCommand }) => {
+  const [open, setOpen] = useState(false);
+
   let list;
-  if (nodes) {
+  if (nodes && nodes.length > 0) {
     list = nodes.map((item) => (
       <NodeItems
         key={uuid()}
@@ -96,15 +102,32 @@ const NodeList = ({ nodes, setCommand }) => {
       />
     ));
     return (
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        height: '80px',
-        overflowY: 'auto',
-        marginTop: '12px',
-      }}
-      >
-        {list}
+      <div style={{ width: '100%' }}>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          height: '80px',
+          overflowY: 'auto',
+          marginTop: '12px',
+          width: '100%',
+        }}
+        >
+          {list}
+        </div>
+
+        <Button
+          className="node-item"
+          type="button"
+          onClick={() => setOpen(true)}
+          style={{ marginTop: '10px' }}
+        >
+          Add New Node (+)
+        </Button>
+        <NewNodeModal
+          open={open}
+          setOpen={setOpen}
+          setCommand={setCommand}
+        />
       </div>
     );
   }
@@ -218,13 +241,14 @@ const PropertyList = ({ propertyKeys, setCommand }) => {
       />
     ));
     return (
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        height: '80px',
-        overflowY: 'auto',
-        marginTop: '12px',
-      }}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          height: '80px',
+          overflowY: 'auto',
+          marginTop: '12px',
+        }}
       >
         {list}
       </div>
@@ -244,7 +268,7 @@ PropertyList.propTypes = {
 const PropertyItems = ({ propertyName, keyType, setCommand }) => (
   <button
     type="button"
-    className={`${keyType === 'v' ? 'propertie-item' : 'propertie-item'} propertie-item`}
+    className={`${keyType === 'v' ? 'property-item' : 'property-item'} property-item`}
     onClick={() => setCommand(genPropQuery(keyType, propertyName))}
   >
     {propertyName}
@@ -256,7 +280,7 @@ PropertyItems.propTypes = {
   setCommand: PropTypes.func.isRequired,
 };
 
-const ConnectedText = ({ userName, roleName }) => (
+const ConnectionConfirmation = ({ userName, roleName }) => (
   <div>
     <h6>
       <div style={{ display: 'flex', flexWrap: 'wrap' }}>
@@ -271,7 +295,7 @@ const ConnectedText = ({ userName, roleName }) => (
   </div>
 );
 
-ConnectedText.propTypes = {
+ConnectionConfirmation.propTypes = {
   userName: PropTypes.string.isRequired,
   roleName: PropTypes.string.isRequired,
 };
@@ -329,62 +353,59 @@ const SidebarHome = ({
 
   return (
     <div className="sidebar-home">
-      <div className="sidebar sidebar-body">
-        <div className="form-group sidebar-item">
-          <b>Node Label</b>
+      <div className="sidebar sidebar-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+
+        <div className="form-group sidebar-item" style={{ width: '100%', margin: 0, paddingLeft: '10px' }}>
+          <b>Find nodes with label:</b>
           <br />
           <NodeList nodes={nodes} setCommand={setCommand} />
         </div>
-        <VerticalLine />
-        <div className="form-group sidebar-item">
-          <b>Edge Label</b>
+        <div className="form-group sidebar-item" style={{ width: '100%', margin: 0, paddingLeft: '10px' }}>
+          <b>Find edges with label:</b>
           <br />
           <EdgeList edges={edges} setCommand={setCommand} />
         </div>
-        <VerticalLine />
-        <div className="form-group sidebar-item">
-          <b>Properties</b>
+        <div className="form-group sidebar-item" style={{ width: '100%', margin: 0, paddingLeft: '10px' }}>
+          <b>Find itens with properties:</b>
           <br />
           <PropertyList propertyKeys={propertyKeys} setCommand={setCommand} />
         </div>
-        <VerticalLine />
+
         <div className="form-group sidebar-item-disconnect">
-          <button
-            className="frame-head-button btn btn-link"
-            type="button"
-            aria-label="Refresh home sidebar"
-            onClick={() => refreshSidebarHome()}
-          >
-            <i className="icon-refresh" />
-          </button>
-          <br />
-          <b>Refresh</b>
           <div style={{
-            border: '1px solid #C4C4C4',
-            opacity: '1',
-            width: '80%',
-            height: '0',
-            margin: '3px auto',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
           }}
-          />
-          <button
-            className="frame-head-button btn btn-link"
-            type="button"
-            aria-label="Disconnect"
-            onClick={() => confirm({
-              title: 'Are you sure you want to close this window?',
-              onOk() {
-                requestDisconnect();
-              },
-              onCancel() {
-                return false;
-              },
-            })}
           >
-            <i className="icon-close-session" />
-          </button>
-          <br />
-          <b>Close Session</b>
+            <button
+              className="frame-head-button btn btn-link"
+              type="button"
+              aria-label="Refresh home sidebar"
+              onClick={() => refreshSidebarHome()}
+            >
+              <i className="icon-refresh" />
+            </button>
+            <b>Refresh</b>
+            <button
+              className="frame-head-button btn btn-link"
+              type="button"
+              aria-label="Disconnect"
+              onClick={() => confirm({
+                title: 'Are you sure you want to close this window?',
+                onOk() {
+                  requestDisconnect();
+                },
+                onCancel() {
+                  return false;
+                },
+              })}
+            >
+              <i className="icon-close-session" />
+            </button>
+            <b>Close Session</b>
+          </div>
         </div>
       </div>
     </div>
