@@ -81,28 +81,39 @@ const CypherResultCytoscapeCharts = ({
           data: cytoscapeObject.elements(':selected')[0].data(),
         });
       }
-
       e.target.removeClass('highlight');
     });
-
     targetElements.bind('click', (e) => {
       const ele = e.target;
       if (ele.selected() && ele.isNode()) {
         if (cytoscapeObject.nodes(':selected').size() === 1) {
-          ele.neighborhood().selectify().select().unselectify();
+          ele
+            .neighborhood()
+            .selectify()
+            .select()
+            .unselectify();
         } else {
-          cytoscapeObject.nodes(':selected').filter(`[id != "${ele.id()}"]`).neighborhood().selectify()
+          cytoscapeObject
+            .nodes(':selected')
+            .filter(`[id != "${ele.id()}"]`)
+            .neighborhood()
+            .selectify()
             .select()
             .unselectify();
         }
       } else {
-        cytoscapeObject.elements(':selected').unselect().selectify();
+        cytoscapeObject
+          .elements(':selected')
+          .unselect()
+          .selectify();
       }
     });
-
     cytoscapeObject.bind('click', (e) => {
       if (e.target === cytoscapeObject) {
-        cytoscapeObject.elements(':selected').unselect().selectify();
+        cytoscapeObject
+          .elements(':selected')
+          .unselect()
+          .selectify();
         onElementsMouseover({
           type: 'background',
           data: {
@@ -114,6 +125,11 @@ const CypherResultCytoscapeCharts = ({
     });
   };
 
+  /**
+   * Add elements on cytoscape canvas.
+   * This function is activated when selecting the function to 'extend' a node
+   * through the right-click context menu.
+   */
   const addElements = (centerId, d) => {
     const generatedData = generateCytoscapeElement(d.rows, maxDataOfGraph, true);
     if (generatedData.elements.nodes.length === 0) {
@@ -132,30 +148,48 @@ const CypherResultCytoscapeCharts = ({
     const rerenderTargets = newlyAddedEdges.union(newlyAddedTargets).union(newlyAddedSources);
 
     const centerPosition = { ...cytoscapeObject.nodes().getElementById(centerId).position() };
+
     cytoscapeObject.elements().unlock();
+
     rerenderTargets.layout(seletableLayouts.concentric).run();
 
     const centerMovedPosition = { ...cytoscapeObject.nodes().getElementById(centerId).position() };
     const xGap = centerMovedPosition.x - centerPosition.x;
     const yGap = centerMovedPosition.y - centerPosition.y;
+
     rerenderTargets.forEach((ele) => {
       const pos = ele.position();
       ele.position({ x: pos.x - xGap, y: pos.y - yGap });
     });
+
     addEventOnElements(cytoscapeObject.elements('new'));
 
     addLegendData(generatedData.legend);
     rerenderTargets.removeClass('new');
+    return 0;
   };
 
+  /**
+   * Node's context menu actions.
+   * Triggered when changes occur in 'cytoscapeObject' and 'cytoscapeMenu'.
+   * The context menu opens when the user right-clicks a node in the cytoscape
+   * canvas.
+   */
   useEffect(() => {
     if (cytoscapeMenu === null && cytoscapeObject !== null) {
       const cxtMenuConf = {
+        /**
+         * @param {Object} ele - node or edge inside the cytoscape canvas.
+         */
         menuRadius(ele) {
           return ele.cy().zoom() <= 1 ? 55 : 70;
         },
         selector: 'node',
         commands: [
+
+          /**
+           * Lock icon: make the node go back to its initial place.
+           */
           {
             content: ReactDOMServer.renderToString(
               (<FontAwesomeIcon icon={faLockOpen} size="lg" />),
@@ -164,6 +198,10 @@ const CypherResultCytoscapeCharts = ({
               ele.animate({ position: initLocation[ele.id()] });
             },
           },
+
+          /**
+           * Make all the node's hidden connections appear
+           */
           {
             content: ReactDOMServer.renderToString(
               (<FontAwesomeIcon icon={faProjectDiagram} size="lg" />),
@@ -185,6 +223,9 @@ const CypherResultCytoscapeCharts = ({
             },
           },
 
+          /**
+           * Remove element from the canvas
+           */
           {
             content: ReactDOMServer.renderToString(
               (<FontAwesomeIcon icon={faEyeSlash} size="lg" />),
@@ -194,6 +235,10 @@ const CypherResultCytoscapeCharts = ({
             },
           },
 
+          /**
+           * Action for when you click on the 'X' that's in the
+           * right click context menu.
+           */
           {
             content: ReactDOMServer.renderToString(
               (<FontAwesomeIcon icon={faWindowClose} size="lg" />),
@@ -220,12 +265,15 @@ const CypherResultCytoscapeCharts = ({
     }
   }, [cytoscapeObject, cytoscapeMenu]);
 
+  /**
+   * Creating a new instance of the cytoscape canvas.
+   * Activated when a query is sent or when changing the layout of the graph.
+   */
   useEffect(() => {
     if (cytoscapeLayout && cytoscapeObject) {
       const selectedLayout = seletableLayouts[cytoscapeLayout];
       selectedLayout.animate = true;
       selectedLayout.fit = true;
-
       cytoscapeObject.minZoom(1e-1);
       cytoscapeObject.maxZoom(1.5);
       cytoscapeObject.layout(selectedLayout).run();
@@ -240,8 +288,7 @@ const CypherResultCytoscapeCharts = ({
   const cyCallback = useCallback((newCytoscapeObject) => {
     if (cytoscapeObject) return;
     setCytoscapeObject(newCytoscapeObject);
-  },
-  [cytoscapeObject]);
+  }, [cytoscapeObject]);
 
   return (
     <div>
@@ -267,11 +314,7 @@ const CypherResultCytoscapeCharts = ({
   );
 };
 
-CypherResultCytoscapeCharts.defaultProps = {
-  cytoscapeObject: null,
-};
-
-CypherResultCytoscapeCharts.propTypes = {
+CypherResultCytoscapeChart.propTypes = {
   elements: PropTypes.shape({
     nodes: PropTypes.arrayOf(PropTypes.shape({
       // eslint-disable-next-line react/forbid-prop-types
@@ -290,5 +333,8 @@ CypherResultCytoscapeCharts.propTypes = {
   onElementsMouseover: PropTypes.func.isRequired,
   addLegendData: PropTypes.func.isRequired,
 };
+CypherResultCytoscapeChart.defaultProps = {
+  cytoscapeObject: null,
+};
 
-export default CypherResultCytoscapeCharts;
+export default CypherResultCytoscapeChart;
