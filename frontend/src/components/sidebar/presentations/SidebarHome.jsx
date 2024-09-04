@@ -203,6 +203,8 @@ const EdgeList = ({ edges, setCommand }) => {
           open={open}
           setOpen={setOpen}
           setCommand={setCommand}
+          originID=""
+          targetID=""
         />
       </div>
     );

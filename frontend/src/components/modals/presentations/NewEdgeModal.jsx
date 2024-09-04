@@ -6,9 +6,21 @@ import {
   Button, Form, Input, Modal, Space,
 } from 'antd';
 
+/**
+ * Component opens when clicking the "Create New Edge Button (+)" in Sidebar
+ * or when visually drawing an edge through cytoscape canvas.
+ *
+ * @param {boolean} open - is the modal window open?
+ * @param {function} setOpen - set the value of 'open' variable.
+ * @param {function} setCommand - send the string to the editor.
+ * @param {number} originID - the starting node's <gid> in an edge.
+ * @param {number} targetID - the ending node's <gid> in an edge.
+ *
+ * @returns {React.ReactElement} NewEdgeModal.
+ */
 export const NewEdgeModal = (
   {
-    open, setOpen, setCommand,
+    open, setOpen, setCommand, originID = '', targetID = '',
   },
 ) => {
   const [form] = Form.useForm();
@@ -17,7 +29,7 @@ export const NewEdgeModal = (
   /**
    * Transforms a json into a cypher query.
    *
-   * @param {json} jsonInput - a json with edge label, origin and target ID,
+   * @param {Object} jsonInput - a json with edge label, origin and target ID,
    * and edge properties as keys.
    *
    * @returns {string} cypherQuery - the given json transformed into a CREATE
@@ -54,6 +66,13 @@ export const NewEdgeModal = (
     setOpen(false);
   };
 
+  /**
+    * Actions performed on clicking the 'cancel' button in the modal form.
+    */
+  const handleCancelButton = () => {
+    setOpen(false);
+  };
+
   return (
     <>
       <pre>{JSON.stringify(formValues, null, 2)}</pre>
@@ -66,12 +85,16 @@ export const NewEdgeModal = (
           autoFocus: true,
           htmlType: 'submit',
         }}
-        onCancel={() => setOpen(false)}
+        onCancel={() => handleCancelButton()}
         modalRender={(dom) => (
           <Form
             name="dynamic_form_nest_item"
             form={form}
             onFinish={(values) => onCreate(values, setOpen, setCommand)}
+            initialValues={{
+              OriginID: originID,
+              TargetID: targetID,
+            }}
             style={{
               maxWidth: 600,
             }}
@@ -103,7 +126,10 @@ export const NewEdgeModal = (
               },
             ]}
           >
-            <Input placeholder="Origin node ID" />
+            <Input
+              type="textarea"
+              placeholder="Origin node ID"
+            />
           </Form.Item>
 
           <Form.Item
@@ -115,7 +141,10 @@ export const NewEdgeModal = (
               },
             ]}
           >
-            <Input placeholder="Destination node ID" />
+            <Input
+              type="textarea"
+              placeholder="Destination node ID"
+            />
           </Form.Item>
         </Space>
 
@@ -184,6 +213,12 @@ NewEdgeModal.propTypes = {
   open: PropTypes.bool.isRequired,
   setOpen: PropTypes.func.isRequired,
   setCommand: PropTypes.func.isRequired,
+  originID: PropTypes.string,
+  targetID: PropTypes.string,
+};
+NewEdgeModal.defaultProps = {
+  originID: '',
+  targetID: '',
 };
 
 export default NewEdgeModal;

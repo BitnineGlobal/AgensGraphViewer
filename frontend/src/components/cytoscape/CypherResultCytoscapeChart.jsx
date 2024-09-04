@@ -15,8 +15,8 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { Modal, Button } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap styles are imported
+import { Modal } from 'antd';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -25,7 +25,14 @@ import {
   faProjectDiagram,
   faCodeCompare,
 } from '@fortawesome/free-solid-svg-icons';
+
+/* https://js.cytoscape.org/ */
 import cytoscape from 'cytoscape';
+import CytoscapeComponent from 'react-cytoscapejs';
+
+/* https://github.com/cytoscape/cytoscape.js-edgehandles */
+import edgehandles from 'cytoscape-edgehandles';
+
 import COSEBilkent from 'cytoscape-cose-bilkent';
 import cola from 'cytoscape-cola';
 import dagre from 'cytoscape-dagre';
@@ -33,12 +40,15 @@ import klay from 'cytoscape-klay';
 import euler from 'cytoscape-euler';
 import avsdf from 'cytoscape-avsdf';
 import spread from 'cytoscape-spread';
-import CytoscapeComponent from 'react-cytoscapejs';
-import cxtmenu from '../../lib/cytoscape-cxtmenu-bitnine';
 import { initLocation, seletableLayouts } from './CytoscapeLayouts';
 import { stylesheet } from './CytoscapeStyleSheet';
 import { generateCytoscapeElement } from '../../features/cypher/CypherUtil';
+
+import ehConfig from './EdgehandlesConfig';
+
+import cxtmenu from '../../lib/cytoscape-cxtmenu-bitnine';
 import styles from '../frame/Frame.module.scss';
+import NewEdgeModal from '../modals/containers/NewEdgeModal';
 
 cytoscape.use(COSEBilkent);
 cytoscape.use(cola);
@@ -48,24 +58,64 @@ cytoscape.use(euler);
 cytoscape.use(avsdf);
 cytoscape.use(spread);
 cytoscape.use(cxtmenu);
+cytoscape.use(edgehandles);
 
-const CypherResultCytoscapeCharts = ({
-  elements, cytoscapeObject, setCytoscapeObject, cytoscapeLayout, maxDataOfGraph,
-  onElementsMouseover, addLegendData,
+/**
+ * The drawn graph canvas from cytoscape library.
+ * It appears when a query is sent through the editor box.
+ *
+ * @param {object} elements - the nodes and edges visually drawn on the canvas.
+ * @param {object} cytoscapeObject - the instance of cytoscape containing all
+ * info to draw the graph.
+ * @param {object} setCytoscapeObject - function to change the state of the
+ * cytoscape instance.
+ *
+ * @returns {ReactDOM}
+ */
+const CypherResultCytoscapeChart = ({
+  elements,
+  cytoscapeObject,
+  setCytoscapeObject,
+  cytoscapeLayout,
+  maxDataOfGraph,
+  onElementsMouseover,
+  addLegendData,
 }) => {
   const [cytoscapeMenu, setCytoscapeMenu] = useState(null);
   const [initialized, setInitialized] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [open, setOpen] = useState(false);
+  const [oID, setOriginID] = useState(null);
+  const [tID, setTargetID] = useState(null);
 
-  const handleClose = () => setShowModal(false);
+  let edgeHandlesInstance;
 
+  /**
+   * Modal alert opened when there's no data to 'extend' on node. The action
+   * happens when the user selects the 'graph' icon in a node's right click
+   * context menu.
+   */
+  const info = () => {
+    Modal.info({
+      content: (
+        <div>
+          <p>No data to extend</p>
+        </div>
+      ),
+      onOk() {},
+    });
+  };
+
+  /**
+   * Add events to cytoscape elements: nodes or edges.
+   *
+   * @param {object} targetElements - a cytoscapeObject.elements("label"),
+   * containing the nodes and edges inside the cytoscapeObject.
+   */
   const addEventOnElements = (targetElements) => {
     targetElements.bind('mouseover', (e) => {
       onElementsMouseover({ type: 'elements', data: e.target.data() });
       e.target.addClass('highlight');
     });
-
     targetElements.bind('mouseout', (e) => {
       if (cytoscapeObject.elements(':selected').length === 0) {
         onElementsMouseover({
@@ -123,6 +173,24 @@ const CypherResultCytoscapeCharts = ({
         });
       }
     });
+    /**
+     * EdgeHandles event:
+     * When completing drawing connection between nodes,
+     * pop up modal to enter edge label and properties.
+     *
+     * @param {object} event - 'ehcomplete' event. Has many attributes,
+     * including 'position: {x: float, y: float}'.
+     * @param {object} sourceNode - node at the beggining of the edge.
+     * @param {object} targetNode - node at the tip of the edge.
+     * @param {object} addedEdge - newly drawn edge, represented in red.
+     */
+    cytoscapeObject.on('ehcomplete',
+      (event, sourceNode, targetNode) => {
+        setOriginID(sourceNode.data().id);
+        setTargetID(targetNode.data().id);
+        setOpen(true);
+        // TODO if form is closed, cancel new edge?
+      });
   };
 
   /**
@@ -133,12 +201,8 @@ const CypherResultCytoscapeCharts = ({
   const addElements = (centerId, d) => {
     const generatedData = generateCytoscapeElement(d.rows, maxDataOfGraph, true);
     if (generatedData.elements.nodes.length === 0) {
-      setModalMessage('No data to extend.');
-      setShowModal(true);
-      // alert('No data to extend.');
-      return;
+      return info;
     }
-
     cytoscapeObject.elements().lock();
     cytoscapeObject.add(generatedData.elements);
 
@@ -243,7 +307,12 @@ const CypherResultCytoscapeCharts = ({
             content: ReactDOMServer.renderToString(
               <FontAwesomeIcon icon={faCodeCompare} size="lg" />,
             ),
-            select() {
+            select(ele) {
+              // On selecting the edge connecting function
+              if (edgeHandlesInstance) {
+                edgeHandlesInstance.enableDrawMode(ele);
+              }
+              /* when you finish the connection... */
             },
           },
         ],
@@ -279,6 +348,7 @@ const CypherResultCytoscapeCharts = ({
       cytoscapeObject.layout(selectedLayout).run();
       cytoscapeObject.maxZoom(5);
       if (!initialized) {
+        edgeHandlesInstance = cytoscapeObject.edgehandles({ ehConfig });
         addEventOnElements(cytoscapeObject.elements());
         setInitialized(true);
       }
@@ -297,19 +367,14 @@ const CypherResultCytoscapeCharts = ({
         stylesheet={stylesheet}
         cy={cyCallback}
         className={styles.NormalChart}
-        wheelSensitivity={0.3}
+        wheelSensitivity={0.2}
       />
-      <Modal show={showModal} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Notification</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{modalMessage}</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <NewEdgeModal
+        open={open}
+        setOpen={setOpen}
+        originID={oID}
+        targetID={tID}
+      />
     </div>
   );
 };
