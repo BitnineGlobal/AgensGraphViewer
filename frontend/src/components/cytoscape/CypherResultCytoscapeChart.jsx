@@ -18,6 +18,13 @@ import ReactDOMServer from 'react-dom/server';
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Make sure Bootstrap styles are imported
 import PropTypes from 'prop-types';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faEyeSlash,
+  faLockOpen,
+  faProjectDiagram,
+  faCodeCompare,
+} from '@fortawesome/free-solid-svg-icons';
 import cytoscape from 'cytoscape';
 import COSEBilkent from 'cytoscape-cose-bilkent';
 import cola from 'cytoscape-cola';
@@ -27,13 +34,6 @@ import euler from 'cytoscape-euler';
 import avsdf from 'cytoscape-avsdf';
 import spread from 'cytoscape-spread';
 import CytoscapeComponent from 'react-cytoscapejs';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faEyeSlash,
-  faLockOpen,
-  faProjectDiagram,
-  faWindowClose,
-} from '@fortawesome/free-solid-svg-icons';
 import cxtmenu from '../../lib/cytoscape-cxtmenu-bitnine';
 import { initLocation, seletableLayouts } from './CytoscapeLayouts';
 import { stylesheet } from './CytoscapeStyleSheet';
@@ -241,7 +241,7 @@ const CypherResultCytoscapeCharts = ({
            */
           {
             content: ReactDOMServer.renderToString(
-              (<FontAwesomeIcon icon={faWindowClose} size="lg" />),
+              <FontAwesomeIcon icon={faCodeCompare} size="lg" />,
             ),
             select() {
             },
