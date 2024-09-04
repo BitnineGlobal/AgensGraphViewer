@@ -23,7 +23,7 @@ import { connect, useDispatch } from 'react-redux';
 
 import { SubLabelLeft, SubLabelRight } from './SidebarComponents';
 import { NewNodeModal } from '../../modals/presentations/NewNodeModal';
-import { NewEdgeModal } from '../../modals/presentations/NewEdgeModal';
+import NewEdgeModal from '../../modals/containers/NewEdgeModal';
 
 const genLabelQuery = (eleType, labelName, database) => {
   function age() {
