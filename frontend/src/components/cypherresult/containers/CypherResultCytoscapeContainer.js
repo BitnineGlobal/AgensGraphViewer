@@ -23,15 +23,7 @@ const mapStateToProps = (state, ownProps) => {
   const { refKey } = ownProps;
 
   const generateElements = () => {
-    try {
-      return generateCytoscapeElement(
-        state.cypher.queryResult[refKey].rows, state.setting.maxDataOfGraph, false,
-      );
-    } catch (e) {
-      // TODO need tracing error
-      // console.error(e);
-    }
-    return {
+    let elementsJson = {
       legend: {
         nodeLegend: {},
         edgeLegend: {},
@@ -41,7 +33,20 @@ const mapStateToProps = (state, ownProps) => {
         edges: [],
       },
     };
+
+    try {
+      elementsJson = generateCytoscapeElement(
+        state.cypher.queryResult[refKey].rows,
+        state.setting.maxDataOfGraph,
+        false,
+      );
+    } catch (e) {
+      // TODO need tracing error
+      // console.error(e);
+    }
+    return elementsJson;
   };
+
   return {
     data: generateElements(),
     maxDataOfGraph: state.setting.maxDataOfGraph,

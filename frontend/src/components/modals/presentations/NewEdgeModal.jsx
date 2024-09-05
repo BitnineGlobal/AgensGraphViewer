@@ -6,37 +6,72 @@ import {
   Button, Form, Input, Modal, Space,
 } from 'antd';
 
-function createCypherQuery(jsonInput) {
-  const edgeLabel = jsonInput['Edge label'];
-  const originID = jsonInput.OriginID;
-  const targetID = jsonInput.TargetID;
-  const edgeProperties = jsonInput['Edge properties'];
-  let propString = '';
-  if (edgeProperties && edgeProperties.length > 0) {
-    const propsArray = edgeProperties.map((prop) => `${prop.Key}: '${prop.Value}'`);
-    propString = `{ ${propsArray.join(', ')} }`;
-  }
-  const cypherQuery = `MATCH (a), (b)
-  WHERE id(a) = ${originID}
-  AND
-  id(b) = ${targetID}
-  CREATE (a)-[r:${edgeLabel} ${propString}]->(b)
-  RETURN a, r, b`;
-  return cypherQuery;
-}
-
-function onCreate(values, setOpen, setCommand) {
-  setCommand(createCypherQuery(values));
-  setOpen(false);
-}
-
+/**
+ * Component opens when clicking the "Create New Edge Button (+)" in Sidebar
+ * or when visually drawing an edge through cytoscape canvas.
+ *
+ * @param {boolean} open - is the modal window open?
+ * @param {function} setOpen - set the value of 'open' variable.
+ * @param {function} setCommand - send the string to the editor.
+ * @param {number} originID - the starting node's <gid> in an edge.
+ * @param {number} targetID - the ending node's <gid> in an edge.
+ *
+ * @returns {React.ReactElement} NewEdgeModal.
+ */
 export const NewEdgeModal = (
   {
-    open, setOpen, setCommand,
+    open, setOpen, setCommand, originID = '', targetID = '',
   },
 ) => {
   const [form] = Form.useForm();
   const [formValues] = useState();
+
+  /**
+   * Transforms a json into a cypher query.
+   *
+   * @param {Object} jsonInput - a json with edge label, origin and target ID,
+   * and edge properties as keys.
+   *
+   * @returns {string} cypherQuery - the given json transformed into a CREATE
+   * edge statement as a string in opencypher format.
+   */
+  const createCypherQuery = (jsonInput) => {
+    const edgeLabel = jsonInput['Edge label'];
+    const oID = jsonInput.OriginID;
+    const tID = jsonInput.TargetID;
+    const edgeProperties = jsonInput['Edge properties'];
+    let propString = '';
+    if (edgeProperties && edgeProperties.length > 0) {
+      const propsArray = edgeProperties.map((prop) => `${prop.Key}: '${prop.Value}'`);
+      propString = `{ ${propsArray.join(', ')} }`;
+    }
+    const cypherQuery = `MATCH (a), (b)
+    WHERE id(a) = ${oID}
+    AND
+    id(b) = ${tID}
+    CREATE (a)-[r:${edgeLabel} ${propString}]->(b)
+    RETURN a, r, b`;
+    return cypherQuery;
+  };
+
+  /**
+   * Function activated when clicked OK on the create edge form.
+   * Calls createCypherQuery and sends query to the editor field.
+   * Then closes the modal window.
+   *
+   * @param {json} jsonFormValues - Form data in json format.
+   */
+  const onCreate = (jsonFormValues) => {
+    setCommand(createCypherQuery(jsonFormValues));
+    setOpen(false);
+  };
+
+  /**
+    * Actions performed on clicking the 'cancel' button in the modal form.
+    */
+  const handleCancelButton = () => {
+    setOpen(false);
+  };
 
   return (
     <>
@@ -50,12 +85,16 @@ export const NewEdgeModal = (
           autoFocus: true,
           htmlType: 'submit',
         }}
-        onCancel={() => setOpen(false)}
+        onCancel={() => handleCancelButton()}
         modalRender={(dom) => (
           <Form
             name="dynamic_form_nest_item"
             form={form}
             onFinish={(values) => onCreate(values, setOpen, setCommand)}
+            initialValues={{
+              OriginID: originID,
+              TargetID: targetID,
+            }}
             style={{
               maxWidth: 600,
             }}
@@ -87,7 +126,10 @@ export const NewEdgeModal = (
               },
             ]}
           >
-            <Input placeholder="Origin node ID" />
+            <Input
+              type="textarea"
+              placeholder="Origin node ID"
+            />
           </Form.Item>
 
           <Form.Item
@@ -99,7 +141,10 @@ export const NewEdgeModal = (
               },
             ]}
           >
-            <Input placeholder="Destination node ID" />
+            <Input
+              type="textarea"
+              placeholder="Destination node ID"
+            />
           </Form.Item>
         </Space>
 
@@ -168,6 +213,12 @@ NewEdgeModal.propTypes = {
   open: PropTypes.bool.isRequired,
   setOpen: PropTypes.func.isRequired,
   setCommand: PropTypes.func.isRequired,
+  originID: PropTypes.string,
+  targetID: PropTypes.string,
+};
+NewEdgeModal.defaultProps = {
+  originID: '',
+  targetID: '',
 };
 
 export default NewEdgeModal;
