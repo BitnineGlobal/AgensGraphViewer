@@ -83,7 +83,7 @@ const CypherResultCytoscapeChart = ({
 }) => {
   const [cytoscapeMenu, setCytoscapeMenu] = useState(null);
   const [initialized, setInitialized] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [isEdgeModalOpen, setEdgeModalOpen] = useState(false);
   const [oID, setOriginID] = useState(null);
   const [tID, setTargetID] = useState(null);
 
@@ -188,7 +188,7 @@ const CypherResultCytoscapeChart = ({
       (event, sourceNode, targetNode) => {
         setOriginID(sourceNode.data().id);
         setTargetID(targetNode.data().id);
-        setOpen(true);
+        setEdgeModalOpen(true);
         // TODO if form is closed, cancel new edge?
       });
   };
@@ -370,8 +370,8 @@ const CypherResultCytoscapeChart = ({
         wheelSensitivity={0.2}
       />
       <NewEdgeModal
-        open={open}
-        setOpen={setOpen}
+        isEdgeModalOpen={isEdgeModalOpen}
+        setEdgeModalOpen={setEdgeModalOpen}
         originID={oID}
         targetID={tID}
       />

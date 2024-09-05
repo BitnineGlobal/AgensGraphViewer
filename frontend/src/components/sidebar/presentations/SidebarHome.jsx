@@ -169,7 +169,7 @@ NodeItems.propTypes = {
 };
 
 const EdgeList = ({ edges, setCommand }) => {
-  const [open, setOpen] = useState(false);
+  const [isEdgeModalOpen, setEdgeModalOpen] = useState(false);
   let list;
   if (edges && edges.length > 0) {
     list = edges.map((item) => (
@@ -196,14 +196,14 @@ const EdgeList = ({ edges, setCommand }) => {
         <Button
           className="edge-item"
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => setEdgeModalOpen(true)}
           style={{ marginTop: '10px' }}
         >
           Add New Edge (+)
         </Button>
         <NewEdgeModal
-          open={open}
-          setOpen={setOpen}
+          isEdgeModalOpen={isEdgeModalOpen}
+          setEdgeModalOpen={setEdgeModalOpen}
           setCommand={setCommand}
           originID=""
           targetID=""

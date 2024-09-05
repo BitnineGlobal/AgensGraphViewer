@@ -20,7 +20,7 @@ import {
  */
 export const NewEdgeModal = (
   {
-    open, setOpen, setCommand, originID = '', targetID = '',
+    isEdgeModalOpen, setEdgeModalOpen, setCommand, originID = '', targetID = '',
   },
 ) => {
   const [form] = Form.useForm();
@@ -63,21 +63,21 @@ export const NewEdgeModal = (
    */
   const onCreate = (jsonFormValues) => {
     setCommand(createCypherQuery(jsonFormValues));
-    setOpen(false);
+    setEdgeModalOpen(false);
   };
 
   /**
     * Actions performed on clicking the 'cancel' button in the modal form.
     */
   const handleCancelButton = () => {
-    setOpen(false);
+    setEdgeModalOpen(false);
   };
 
   return (
     <>
       <pre>{JSON.stringify(formValues, null, 2)}</pre>
       <Modal
-        open={open}
+        open={isEdgeModalOpen}
         title="Create a new edge"
         okText="Submit query"
         cancelText="Cancel"
@@ -90,7 +90,7 @@ export const NewEdgeModal = (
           <Form
             name="dynamic_form_nest_item"
             form={form}
-            onFinish={(values) => onCreate(values, setOpen, setCommand)}
+            onFinish={(values) => onCreate(values, setEdgeModalOpen, setCommand)}
             initialValues={{
               OriginID: originID,
               TargetID: targetID,
@@ -210,8 +210,8 @@ export const NewEdgeModal = (
   );
 };
 NewEdgeModal.propTypes = {
-  open: PropTypes.bool.isRequired,
-  setOpen: PropTypes.func.isRequired,
+  isEdgeModalOpen: PropTypes.bool.isRequired,
+  setEdgeModalOpen: PropTypes.func.isRequired,
   setCommand: PropTypes.func.isRequired,
   originID: PropTypes.string,
   targetID: PropTypes.string,
