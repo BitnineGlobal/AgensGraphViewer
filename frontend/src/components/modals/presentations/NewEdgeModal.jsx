@@ -43,13 +43,13 @@ export const NewEdgeModal = (
     let propString = '';
     if (edgeProperties && edgeProperties.length > 0) {
       const propsArray = edgeProperties.map((prop) => `${prop.Key}: '${prop.Value}'`);
-      propString = `{ ${propsArray.join(', ')} }`;
+      propString = ` { ${propsArray.join(', ')} }`;
     }
     const cypherQuery = `MATCH (a), (b)
     WHERE id(a) = ${oID}
     AND
     id(b) = ${tID}
-    CREATE (a)-[r:${edgeLabel} ${propString}]->(b)
+    CREATE (a)-[r:${edgeLabel}${propString}]->(b)
     RETURN a, r, b`;
     return cypherQuery;
   };
